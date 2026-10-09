@@ -1,0 +1,47 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    Подтверждение регистрации — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <div class="mx-auto" style="max-width: 600px;">
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 text-center">
+
+                <h1 class="h3 mb-3">
+                    Проверьте электронную почту
+                </h1>
+
+                <p>
+                    Мы отправили письмо со ссылкой
+                    для подтверждения регистрации.
+                </p>
+
+                <p class="text-muted">
+                    После перехода по ссылке
+                    ваш аккаунт будет активирован.
+                </p>
+
+                <div class="alert alert-info mt-4">
+                    В тестовом режиме письмо
+                    выводится в терминал PyCharm,
+                    где работает Django-сервер.
+                </div>
+
+                <a href="{% url 'home' %}"
+                   class="btn btn-outline-primary">
+                    На главную
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+{% endblock %}

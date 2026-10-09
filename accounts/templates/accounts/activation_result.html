@@ -1,0 +1,55 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    Активация аккаунта — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <div class="mx-auto" style="max-width: 600px;">
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 text-center">
+
+                {% if activated %}
+
+                    <h1 class="h3 text-success mb-3">
+                        Аккаунт активирован!
+                    </h1>
+
+                    <p>
+                        Адрес электронной почты
+                        успешно подтверждён.
+                    </p>
+
+                    <p class="text-muted">
+                        Теперь ваш аккаунт активен.
+                    </p>
+
+                {% else %}
+
+                    <h1 class="h3 text-danger mb-3">
+                        Ошибка активации
+                    </h1>
+
+                    <p>
+                        Ссылка недействительна,
+                        устарела или уже была использована.
+                    </p>
+
+                {% endif %}
+
+                <a href="{% url 'home' %}"
+                   class="btn btn-primary mt-3">
+                    На главную
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+{% endblock %}

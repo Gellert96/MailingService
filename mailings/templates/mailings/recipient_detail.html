@@ -1,0 +1,83 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    Получатель — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <div class="mx-auto" style="max-width: 800px;">
+
+        <h1 class="mb-4">
+            Информация о получателе
+        </h1>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+
+                <h2 class="h4 mb-4">
+                    {{ recipient.full_name }}
+                </h2>
+
+                <p>
+                    <strong>Email:</strong>
+                    {{ recipient.email }}
+                </p>
+
+                <p>
+                    <strong>Владелец:</strong>
+                    {% if recipient.owner %}
+                        {{ recipient.owner.email }}
+                    {% else %}
+                        Не указан
+                    {% endif %}
+                </p>
+
+                <hr>
+
+                <h3 class="h5 mb-3">
+                    Комментарий
+                </h3>
+
+                <div class="bg-light border rounded p-3 mb-4">
+                    {% if recipient.comment %}
+                        {{ recipient.comment|linebreaks }}
+                    {% else %}
+                        <span class="text-muted">
+                            Комментарий отсутствует.
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+
+                    {% if recipient.owner_id == user.pk %}
+
+                        <a href="{% url 'recipient_update' recipient.pk %}"
+                           class="btn btn-primary">
+                            Редактировать
+                        </a>
+
+                        <a href="{% url 'recipient_delete' recipient.pk %}"
+                           class="btn btn-outline-danger">
+                            Удалить
+                        </a>
+
+                    {% endif %}
+
+                    <a href="{% url 'recipient_list' %}"
+                       class="btn btn-outline-secondary">
+                        ← К списку
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+{% endblock %}

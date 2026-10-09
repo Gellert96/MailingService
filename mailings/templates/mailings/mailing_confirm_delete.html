@@ -1,0 +1,63 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    Удаление рассылки — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <div class="mx-auto" style="max-width: 650px;">
+
+        <h1 class="mb-4">Удаление рассылки</h1>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+
+                <div class="alert alert-warning">
+                    Вы действительно хотите удалить
+                    <strong>рассылку №{{ object.pk }}</strong>?
+                </div>
+
+                <p>
+                    <strong>Сообщение:</strong>
+                    {{ object.message.subject }}
+                </p>
+
+                <p>
+                    <strong>Начало:</strong>
+                    {{ object.start_time|date:"d.m.Y H:i" }}
+                </p>
+
+                <p class="text-danger">
+                    Это действие нельзя отменить.
+                    Связанная история попыток отправки
+                    также будет удалена.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="d-flex gap-2">
+
+                        <button type="submit"
+                                class="btn btn-danger">
+                            Да, удалить
+                        </button>
+
+                        <a href="{% url 'mailing_detail' object.pk %}"
+                           class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+{% endblock %}

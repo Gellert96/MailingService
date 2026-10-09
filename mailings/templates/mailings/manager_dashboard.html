@@ -1,0 +1,287 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    Панель менеджера — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <h1 class="mb-4">Панель менеджера</h1>
+
+    <!-- Уведомления -->
+    {% if messages %}
+        {% for notification in messages %}
+            <div class="alert {% if notification.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                {{ notification }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Статистика -->
+    <div class="row g-3 mb-5">
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h2 class="h6 text-muted">
+                        Пользователи
+                    </h2>
+
+                    <p class="display-6 fw-bold mb-0">
+                        {{ users_count }}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h2 class="h6 text-muted">
+                        Всего рассылок
+                    </h2>
+
+                    <p class="display-6 fw-bold mb-0">
+                        {{ mailings_count }}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h2 class="h6 text-muted">
+                        Включённые рассылки
+                    </h2>
+
+                    <p class="display-6 fw-bold mb-0 text-success">
+                        {{ enabled_mailings_count }}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Пользователи -->
+    <div class="card border-0 shadow-sm mb-5">
+
+        <div class="card-body p-4">
+
+            <h2 class="h4 mb-4">
+                Управление пользователями
+            </h2>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Состояние</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for account in users %}
+
+                            <tr>
+                                <td>{{ account.pk }}</td>
+
+                                <td>
+                                    {{ account.email }}
+                                </td>
+
+                                <td>
+                                    {% if account.is_active %}
+                                        <span class="badge bg-success">
+                                            Активен
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            Заблокирован
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if account.can_be_managed %}
+
+                                        <form
+                                            method="post"
+                                            action="{% url 'manager_toggle_user' account.pk %}"
+                                        >
+                                            {% csrf_token %}
+
+                                            {% if account.is_active %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                >
+                                                    Заблокировать
+                                                </button>
+
+                                            {% else %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-success"
+                                                >
+                                                    Разблокировать
+                                                </button>
+
+                                            {% endif %}
+
+                                        </form>
+
+                                    {% else %}
+
+                                        <span class="text-muted small">
+                                            Изменение недоступно
+                                        </span>
+
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    Пользователей нет.
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Рассылки -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <h2 class="h4 mb-4">
+                Управление рассылками
+            </h2>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Сообщение</th>
+                            <th>Владелец</th>
+                            <th>Состояние</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for mailing in mailings %}
+
+                            <tr>
+
+                                <td>
+                                    <a href="{% url 'mailing_detail' mailing.pk %}">
+                                        №{{ mailing.pk }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    {{ mailing.message.subject }}
+                                </td>
+
+                                <td>
+                                    {{ mailing.owner.email|default:"Не указан" }}
+                                </td>
+
+                                <td>
+                                    {% if mailing.is_enabled %}
+
+                                        <span class="badge bg-success">
+                                            Включена
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+                                            Отключена
+                                        </span>
+
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <form
+                                        method="post"
+                                        action="{% url 'manager_toggle_mailing' mailing.pk %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        {% if mailing.is_enabled %}
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                            >
+                                                Отключить
+                                            </button>
+
+                                        {% else %}
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-sm btn-outline-success"
+                                            >
+                                                Включить
+                                            </button>
+
+                                        {% endif %}
+
+                                    </form>
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    Рассылок пока нет.
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
+</section>
+{% endblock %}

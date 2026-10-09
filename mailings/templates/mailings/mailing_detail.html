@@ -1,0 +1,275 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    Рассылка №{{ mailing.pk }} — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <div class="mx-auto" style="max-width: 950px;">
+
+        <h1 class="mb-4">
+            Рассылка №{{ mailing.pk }}
+        </h1>
+
+        <!-- Уведомления -->
+        {% if messages %}
+            {% for notification in messages %}
+                <div class="alert {% if notification.tags == 'error' %}alert-danger{% elif notification.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                    {{ notification }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Информация о рассылке -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+
+                <h2 class="h5 mb-4">
+                    Информация о рассылке
+                </h2>
+
+                <p>
+                    <strong>Владелец:</strong>
+
+                    {% if mailing.owner %}
+                        {{ mailing.owner.email }}
+                    {% else %}
+                        Не указан
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Сообщение:</strong>
+                    {{ mailing.message.subject }}
+                </p>
+
+                <p>
+                    <strong>Начало отправки:</strong>
+                    {{ mailing.start_time|date:"d.m.Y H:i" }}
+                </p>
+
+                <p>
+                    <strong>Окончание отправки:</strong>
+                    {{ mailing.end_time|date:"d.m.Y H:i" }}
+                </p>
+
+                <p>
+                    <strong>Статус:</strong>
+
+                    {% if mailing.status == "Запущена" %}
+                        <span class="badge bg-success">
+                            Запущена
+                        </span>
+
+                    {% elif mailing.status == "Завершена" %}
+                        <span class="badge bg-secondary">
+                            Завершена
+                        </span>
+
+                    {% else %}
+                        <span class="badge bg-warning text-dark">
+                            Создана
+                        </span>
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Состояние:</strong>
+
+                    {% if mailing.is_enabled %}
+                        <span class="badge bg-success">
+                            Включена
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger">
+                            Отключена
+                        </span>
+                    {% endif %}
+                </p>
+
+                <hr>
+
+                <!-- Текст письма -->
+                <h3 class="h5 mb-3">
+                    Текст сообщения
+                </h3>
+
+                <div class="bg-light border rounded p-3 mb-4">
+                    {{ mailing.message.body|linebreaks }}
+                </div>
+
+                <!-- Получатели -->
+                <h3 class="h5 mb-3">
+                    Получатели
+                </h3>
+
+                <ul class="list-group mb-4">
+
+                    {% for recipient in mailing.recipients.all %}
+
+                        <li class="list-group-item">
+                            <strong>{{ recipient.full_name }}</strong>
+
+                            <span class="text-muted">
+                                — {{ recipient.email }}
+                            </span>
+                        </li>
+
+                    {% empty %}
+
+                        <li class="list-group-item text-muted">
+                            Получатели не назначены.
+                        </li>
+
+                    {% endfor %}
+
+                </ul>
+
+                <!-- Запуск рассылки -->
+                {% if mailing.owner_id == user.pk %}
+
+                    <div class="border rounded p-3 mb-4">
+
+                        <h3 class="h5">
+                            Запуск рассылки
+                        </h3>
+
+                        <p class="text-muted">
+                            Отправка разрешена только в
+                            установленный временной интервал.
+                        </p>
+
+                        {% if mailing.is_enabled %}
+
+                            <form
+                                method="post"
+                                action="{% url 'mailing_send' mailing.pk %}"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-success"
+                                >
+                                    Отправить рассылку
+                                </button>
+
+                            </form>
+
+                        {% else %}
+
+                            <div class="alert alert-warning mb-0">
+                                Эта рассылка отключена менеджером.
+                                Отправка запрещена.
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endif %}
+
+                <!-- Управление -->
+                <div class="d-flex gap-2 flex-wrap">
+
+                    {% if mailing.owner_id == user.pk %}
+
+                        <a href="{% url 'mailing_update' mailing.pk %}"
+                           class="btn btn-primary">
+                            Редактировать
+                        </a>
+
+                        <a href="{% url 'mailing_delete' mailing.pk %}"
+                           class="btn btn-outline-danger">
+                            Удалить
+                        </a>
+
+                    {% endif %}
+
+                    <a href="{% url 'mailing_list' %}"
+                       class="btn btn-outline-secondary">
+                        ← К списку
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- История попыток отправки -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+
+                <h2 class="h4 mb-4">
+                    История попыток отправки
+                </h2>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Дата и время</th>
+                                <th>Статус</th>
+                                <th>Ответ почтового сервера</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for attempt in mailing.attempts.all %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ attempt.attempt_time|date:"d.m.Y H:i:s" }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if attempt.status == "Успешно" %}
+                                            <span class="badge bg-success">
+                                                Успешно
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                Не успешно
+                                            </span>
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+                                        {{ attempt.server_response }}
+                                    </td>
+
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+                                    <td colspan="3"
+                                        class="text-center text-muted py-4">
+                                        Попыток отправки пока нет.
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+{% endblock %}

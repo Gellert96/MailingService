@@ -1,0 +1,21 @@
+# Секреты
+.env
+.env.*
+!.env.example
+
+# Виртуальное окружение
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# PyCharm
+.idea/
+
+# Сгенерированные статические файлы
+staticfiles/
+
+# Временные файлы
+*.log

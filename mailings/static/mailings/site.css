@@ -1,0 +1,17 @@
+
+/* Дополнительные стили MailingService */
+
+/* Удобное отображение заголовков таблиц */
+.table thead th {
+    white-space: nowrap;
+}
+
+/* Плавное изменение тени карточек */
+.card {
+    transition: box-shadow 0.2s ease;
+}
+
+/* Небольшой отступ для ссылок навигации */
+.navbar .nav-link {
+    transition: color 0.2s ease;
+}

@@ -1,0 +1,95 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    {% if object %}
+        Редактирование рассылки
+    {% else %}
+        Создание рассылки
+    {% endif %}
+    — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <div class="mx-auto" style="max-width: 800px;">
+
+        <h1 class="mb-4">
+            {% if object %}
+                Редактировать рассылку
+            {% else %}
+                Создать рассылку
+            {% endif %}
+        </h1>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold"
+                                   for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.name == "recipients" %}
+                                <div class="form-text">
+                                    Для выбора нескольких получателей
+                                    удерживайте Ctrl и нажимайте
+                                    на нужные имена.
+                                </div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+                    {% endfor %}
+
+                    <div class="alert alert-info">
+                        Дата начала рассылки не может быть
+                        в прошлом и должна быть раньше даты окончания.
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+
+                        <button type="submit"
+                                class="btn btn-primary">
+                            {% if object %}
+                                Сохранить изменения
+                            {% else %}
+                                Создать рассылку
+                            {% endif %}
+                        </button>
+
+                        <a href="{% url 'mailing_list' %}"
+                           class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+{% endblock %}

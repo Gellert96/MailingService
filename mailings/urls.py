@@ -1,0 +1,141 @@
+from django.urls import path
+
+from mailings.manager_views import (
+    ManagerDashboardView,
+    ManagerToggleMailingView,
+    ManagerToggleUserView,
+)
+from mailings.statistics_views import MailingStatisticsView
+from mailings.views import (
+    HomeView,
+    MailingCreateView,
+    MailingDeleteView,
+    MailingDetailView,
+    MailingListView,
+    MailingSendView,
+    MailingUpdateView,
+    MessageCreateView,
+    MessageDeleteView,
+    MessageDetailView,
+    MessageListView,
+    MessageUpdateView,
+    RecipientCreateView,
+    RecipientDeleteView,
+    RecipientDetailView,
+    RecipientListView,
+    RecipientUpdateView,
+)
+
+urlpatterns = [
+    # Главная страница
+    path(
+        "",
+        HomeView.as_view(),
+        name="home",
+    ),
+    # Получатели
+    path(
+        "recipients/",
+        RecipientListView.as_view(),
+        name="recipient_list",
+    ),
+    path(
+        "recipients/create/",
+        RecipientCreateView.as_view(),
+        name="recipient_create",
+    ),
+    path(
+        "recipients/<int:pk>/",
+        RecipientDetailView.as_view(),
+        name="recipient_detail",
+    ),
+    path(
+        "recipients/<int:pk>/edit/",
+        RecipientUpdateView.as_view(),
+        name="recipient_update",
+    ),
+    path(
+        "recipients/<int:pk>/delete/",
+        RecipientDeleteView.as_view(),
+        name="recipient_delete",
+    ),
+    # Сообщения
+    path(
+        "messages/",
+        MessageListView.as_view(),
+        name="message_list",
+    ),
+    path(
+        "messages/create/",
+        MessageCreateView.as_view(),
+        name="message_create",
+    ),
+    path(
+        "messages/<int:pk>/",
+        MessageDetailView.as_view(),
+        name="message_detail",
+    ),
+    path(
+        "messages/<int:pk>/edit/",
+        MessageUpdateView.as_view(),
+        name="message_update",
+    ),
+    path(
+        "messages/<int:pk>/delete/",
+        MessageDeleteView.as_view(),
+        name="message_delete",
+    ),
+    # Рассылки
+    path(
+        "mailings/",
+        MailingListView.as_view(),
+        name="mailing_list",
+    ),
+    path(
+        "mailings/create/",
+        MailingCreateView.as_view(),
+        name="mailing_create",
+    ),
+    path(
+        "mailings/<int:pk>/",
+        MailingDetailView.as_view(),
+        name="mailing_detail",
+    ),
+    path(
+        "mailings/<int:pk>/edit/",
+        MailingUpdateView.as_view(),
+        name="mailing_update",
+    ),
+    path(
+        "mailings/<int:pk>/delete/",
+        MailingDeleteView.as_view(),
+        name="mailing_delete",
+    ),
+    path(
+        "mailings/<int:pk>/send/",
+        MailingSendView.as_view(),
+        name="mailing_send",
+    ),
+    # Панель менеджера
+    path(
+        "manager/",
+        ManagerDashboardView.as_view(),
+        name="manager_dashboard",
+    ),
+    path(
+        "manager/users/<int:pk>/toggle/",
+        ManagerToggleUserView.as_view(),
+        name="manager_toggle_user",
+    ),
+    path(
+        "manager/mailings/<int:pk>/toggle/",
+        ManagerToggleMailingView.as_view(),
+        name="manager_toggle_mailing",
+    ),
+    # Персональная статистика
+    path(
+        "statistics/",
+        MailingStatisticsView.as_view(),
+        name="mailing_statistics",
+    ),
+]

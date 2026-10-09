@@ -1,0 +1,184 @@
+
+{% extends "mailings/base.html" %}
+
+{% block title %}
+    Моя статистика — MailingService
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+
+    <h1 class="mb-2">Моя статистика</h1>
+
+    <p class="text-muted mb-4">
+        Результаты отправки электронных сообщений
+        по вашим рассылкам.
+    </p>
+
+    <!-- Общие показатели -->
+    <div class="row g-3 mb-5">
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <h2 class="h6 text-muted">
+                        Отправлено писем
+                    </h2>
+
+                    <p class="display-6 fw-bold text-primary mb-0">
+                        {{ sent_messages }}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <h2 class="h6 text-muted">
+                        Успешных попыток
+                    </h2>
+
+                    <p class="display-6 fw-bold text-success mb-0">
+                        {{ successful_attempts }}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <h2 class="h6 text-muted">
+                        Неуспешных попыток
+                    </h2>
+
+                    <p class="display-6 fw-bold text-danger mb-0">
+                        {{ failed_attempts }}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <h2 class="h6 text-muted">
+                        Всего рассылок
+                    </h2>
+
+                    <p class="display-6 fw-bold mb-0">
+                        {{ total_mailings }}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Общее количество попыток -->
+    <div class="alert alert-info mb-4">
+        Всего попыток отправки:
+        <strong>{{ total_attempts }}</strong>.
+        Учитываются успешные и неуспешные
+        отправки каждому получателю.
+    </div>
+
+    <!-- Статистика по отдельным рассылкам -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <h2 class="h4 mb-4">
+                Статистика по рассылкам
+            </h2>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Сообщение</th>
+                            <th>Попыток</th>
+                            <th>Успешно</th>
+                            <th>Ошибок</th>
+                            <th>Последняя попытка</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for mailing in mailing_stats %}
+
+                            <tr>
+
+                                <td>
+                                    <a href="{% url 'mailing_detail' mailing.pk %}">
+                                        №{{ mailing.pk }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    {{ mailing.message.subject }}
+                                </td>
+
+                                <td>
+                                    {{ mailing.total_attempts }}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-success">
+                                        {{ mailing.successful_attempts }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-danger">
+                                        {{ mailing.failed_attempts }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {% if mailing.last_attempt %}
+                                        {{ mailing.last_attempt|date:"d.m.Y H:i:s" }}
+                                    {% else %}
+                                        <span class="text-muted">
+                                            Нет попыток
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+                                <td colspan="6"
+                                    class="text-center text-muted py-4">
+                                    У вас пока нет рассылок.
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
+</section>
+{% endblock %}
