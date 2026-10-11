@@ -29,33 +29,54 @@ from mailings.services import send_mailing
 
 
 class HomeView(TemplateView):
-    """Главная страница с персональной статистикой."""
+    """Главная страница с общей статистикой системы."""
 
     template_name = "mailings/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["total_mailings"] = 0
-        context["active_mailings"] = 0
-        context["total_recipients"] = 0
+        now = timezone.now()
 
-        if self.request.user.is_authenticated:
-            now = timezone.now()
+        # Актуализируем статусы всех рассылок.
 
-            user_mailings = Mailing.objects.filter(owner=self.request.user)
+        # Рассылки, которые ещё не начались
+        (
+            Mailing.objects.filter(start_time__gt=now)
+            .exclude(status=Mailing.Status.CREATED)
+            .update(status=Mailing.Status.CREATED)
+        )
 
-            context["total_mailings"] = user_mailings.count()
-
-            context["active_mailings"] = user_mailings.filter(
-                is_enabled=True,
+        # Рассылки в активном временном интервале
+        (
+            Mailing.objects.filter(
                 start_time__lte=now,
                 end_time__gte=now,
-            ).count()
+            )
+            .exclude(status=Mailing.Status.RUNNING)
+            .update(status=Mailing.Status.RUNNING)
+        )
 
-            context["total_recipients"] = Recipient.objects.filter(
-                owner=self.request.user
-            ).count()
+        # Завершённые рассылки
+        (
+            Mailing.objects.filter(end_time__lt=now)
+            .exclude(status=Mailing.Status.COMPLETED)
+            .update(status=Mailing.Status.COMPLETED)
+        )
+
+        # Общее количество рассылок всей системы
+        context["total_mailings"] = Mailing.objects.count()
+
+        # Активные и включённые рассылки
+        context["active_mailings"] = Mailing.objects.filter(
+            status=Mailing.Status.RUNNING,
+            start_time__lte=now,
+            end_time__gte=now,
+            is_enabled=True,
+        ).count()
+
+        # Общее количество получателей всей системы
+        context["total_recipients"] = Recipient.objects.count()
 
         return context
 
@@ -66,7 +87,7 @@ class HomeView(TemplateView):
 
 
 class RecipientListView(VisibleQuerysetMixin, ListView):
-    """Список своих получателей или всех для менеджера."""
+    """Список получателей с учётом прав доступа."""
 
     model = Recipient
     template_name = "mailings/recipient_list.html"
@@ -75,7 +96,7 @@ class RecipientListView(VisibleQuerysetMixin, ListView):
 
 
 class RecipientDetailView(VisibleQuerysetMixin, DetailView):
-    """Просмотр получателя с проверкой доступа."""
+    """Просмотр отдельного получателя."""
 
     model = Recipient
     template_name = "mailings/recipient_detail.html"
@@ -83,7 +104,7 @@ class RecipientDetailView(VisibleQuerysetMixin, DetailView):
 
 
 class RecipientCreateView(OwnerCreateMixin, CreateView):
-    """Создаёт получателя и автоматически назначает владельца."""
+    """Создание получателя текущим пользователем."""
 
     model = Recipient
     form_class = RecipientForm
@@ -92,7 +113,7 @@ class RecipientCreateView(OwnerCreateMixin, CreateView):
 
 
 class RecipientUpdateView(OwnerQuerysetMixin, UpdateView):
-    """Разрешает редактировать только своих получателей."""
+    """Редактирование только собственного получателя."""
 
     model = Recipient
     form_class = RecipientForm
@@ -101,7 +122,7 @@ class RecipientUpdateView(OwnerQuerysetMixin, UpdateView):
 
 
 class RecipientDeleteView(OwnerQuerysetMixin, DeleteView):
-    """Разрешает удалять только своих получателей."""
+    """Удаление только собственного получателя."""
 
     model = Recipient
     template_name = "mailings/recipient_confirm_delete.html"
@@ -114,7 +135,7 @@ class RecipientDeleteView(OwnerQuerysetMixin, DeleteView):
 
 
 class MessageListView(VisibleQuerysetMixin, ListView):
-    """Список своих сообщений или всех для менеджера."""
+    """Список сообщений с учётом прав доступа."""
 
     model = Message
     template_name = "mailings/message_list.html"
@@ -126,7 +147,7 @@ class MessageListView(VisibleQuerysetMixin, ListView):
 
 
 class MessageDetailView(VisibleQuerysetMixin, DetailView):
-    """Просмотр сообщения с проверкой доступа."""
+    """Просмотр отдельного сообщения."""
 
     model = Message
     template_name = "mailings/message_detail.html"
@@ -134,7 +155,7 @@ class MessageDetailView(VisibleQuerysetMixin, DetailView):
 
 
 class MessageCreateView(OwnerCreateMixin, CreateView):
-    """Создаёт сообщение для текущего пользователя."""
+    """Создание сообщения текущим пользователем."""
 
     model = Message
     form_class = MessageForm
@@ -143,7 +164,7 @@ class MessageCreateView(OwnerCreateMixin, CreateView):
 
 
 class MessageUpdateView(OwnerQuerysetMixin, UpdateView):
-    """Разрешает редактировать только свои сообщения."""
+    """Редактирование только собственного сообщения."""
 
     model = Message
     form_class = MessageForm
@@ -152,7 +173,7 @@ class MessageUpdateView(OwnerQuerysetMixin, UpdateView):
 
 
 class MessageDeleteView(OwnerQuerysetMixin, DeleteView):
-    """Разрешает удалять только свои сообщения."""
+    """Удаление только собственного сообщения."""
 
     model = Message
     template_name = "mailings/message_confirm_delete.html"
@@ -165,7 +186,7 @@ class MessageDeleteView(OwnerQuerysetMixin, DeleteView):
 
 
 class MailingListView(VisibleQuerysetMixin, ListView):
-    """Список доступных пользователю рассылок."""
+    """Список рассылок с проверкой прав доступа."""
 
     model = Mailing
     template_name = "mailings/mailing_list.html"
@@ -176,7 +197,7 @@ class MailingListView(VisibleQuerysetMixin, ListView):
         return (
             super()
             .get_queryset()
-            .select_related("message")
+            .select_related("message", "owner")
             .prefetch_related("recipients")
             .order_by("-start_time")
         )
@@ -184,6 +205,7 @@ class MailingListView(VisibleQuerysetMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Обновляем статусы отображаемых рассылок.
         for mailing in context["mailings"]:
             mailing.update_status()
 
@@ -191,7 +213,7 @@ class MailingListView(VisibleQuerysetMixin, ListView):
 
 
 class MailingDetailView(VisibleQuerysetMixin, DetailView):
-    """Просмотр рассылки с обновлением её статуса."""
+    """Подробная информация о рассылке."""
 
     model = Mailing
     template_name = "mailings/mailing_detail.html"
@@ -199,6 +221,8 @@ class MailingDetailView(VisibleQuerysetMixin, DetailView):
 
     def get_object(self, queryset=None):
         mailing = super().get_object(queryset)
+
+        # Обновляем временной статус при открытии.
         mailing.update_status()
 
         return mailing
@@ -209,7 +233,7 @@ class MailingCreateView(
     OwnerCreateMixin,
     CreateView,
 ):
-    """Создаёт рассылку для текущего пользователя."""
+    """Создание рассылки текущим пользователем."""
 
     model = Mailing
     form_class = MailingForm
@@ -227,7 +251,7 @@ class MailingUpdateView(
     OwnerQuerysetMixin,
     UpdateView,
 ):
-    """Разрешает редактировать только свои рассылки."""
+    """Редактирование только собственной рассылки."""
 
     model = Mailing
     form_class = MailingForm
@@ -241,7 +265,7 @@ class MailingUpdateView(
 
 
 class MailingDeleteView(OwnerQuerysetMixin, DeleteView):
-    """Разрешает удалять только свои рассылки."""
+    """Удаление только собственной рассылки."""
 
     model = Mailing
     template_name = "mailings/mailing_confirm_delete.html"
@@ -249,12 +273,12 @@ class MailingDeleteView(OwnerQuerysetMixin, DeleteView):
 
 
 # --------------------------------------------------
-# Отправка рассылок
+# Ручная отправка рассылки
 # --------------------------------------------------
 
 
 class MailingSendView(OwnerQuerysetMixin, View):
-    """Запускает только собственную рассылку пользователя."""
+    """Отправка рассылки по POST-запросу."""
 
     def post(self, request, pk):
         mailing = get_object_or_404(
@@ -280,4 +304,7 @@ class MailingSendView(OwnerQuerysetMixin, View):
                 ),
             )
 
-        return redirect("mailing_detail", pk=mailing.pk)
+        return redirect(
+            "mailing_detail",
+            pk=mailing.pk,
+        )
